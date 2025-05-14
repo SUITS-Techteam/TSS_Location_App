@@ -9,7 +9,7 @@ distinguished_name = dn
 C = US
 ST = Texas
 L = Houston
-CN = 192.168.51.201
+CN = 192.168.51.110
 
 [ req_ext ]
 subjectAltName = @alt_names
@@ -17,5 +17,5 @@ keyUsage = critical, digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
 
 [ alt_names ]
-IP.1 = 192.168.51.201
+IP.1 = 192.168.51.110
 IP.2 = 192.168.51.110
