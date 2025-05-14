@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Tracker (Separate Posts)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 50px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        #status { margin-top: 20px; font-size: 16px; white-space: pre-line; }
+    </style>
+</head>
+<body>
+    <h1>GPS Tracker Web App</h1>
+    <button onclick="startTracking()">Start Tracking</button>
+    <p id="status">Press the button to start tracking.</p>
+
+    <script>
+        const serverUrl = "https://192.168.50.182:8443";  // Replace with your server address
+        let watchId = null;
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                document.getElementById('status').innerText = "Geolocation not supported.";
+                return;
+            }
+
+            if (watchId !== null) {
+                document.getElementById('status').innerText = "Already tracking.";
+                return;
+            }
+
+            document.getElementById('status').innerText = "Tracking started...";
+
+            watchId = navigator.geolocation.watchPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const acc = position.coords.accuracy;
+
+                // Example conversion (replace with your real conversion if needed)
+                const posx = lon;
+                const posy = lat;
+                const heading = 0.0;  // Update if you have heading data
+
+                document.getElementById('status').innerText = 
+                    `Sending:\nLongitude=${posx}\nLatitude=${posy}\nHeading=${heading}`;
+
+                // Send posx
+                sendSingleValue("imu_eva1_posx", posx);
+
+                // Send posy
+                sendSingleValue("imu_eva1_posy", posy);
+
+                // Send heading
+                sendSingleValue("imu_eva1_heading", heading);
+
+            }, error => {
+                document.getElementById('status').innerText = `Error getting location: ${error.message}`;
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            });
+        }
+
+        function sendSingleValue(paramName, value) {
+
+            // paramName = paramName.replace(/=/g, '');
+            
+            const formData = new URLSearchParams();
+            formData.append(paramName, value);
+
+            // console.log(`Sending: ${paramName} = ${value}`);
+
+            fetch(serverUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: formData.toString()
+            })
+            .then(response => {
+                console.log(`${paramName} → Status: ${response.status}`);
+                if (!response.ok) {
+                    console.error(`Error sending ${paramName}`);
+                }
+            })
+            .catch(err => {
+                console.error(`Network error sending ${paramName}: ${err}`);
+            });
+        }
+    </script>
+</body>
+</html>
