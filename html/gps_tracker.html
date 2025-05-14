@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GPS Tracker (Separate Posts)</title>
+    <title>GPS Tracker (With EVA Selection)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial; text-align: center; margin-top: 50px; }
-        button { padding: 10px 20px; font-size: 16px; }
+        body { font-family: Arial; text-align: center; margin-top: 30px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
         #status { margin-top: 20px; font-size: 16px; white-space: pre-line; }
+        #eva-status { margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>GPS Tracker Web App</h1>
+
+    <!-- EVA Selection Buttons -->
+    <button onclick="setCurrentEva('eva1')">Select EVA1</button>
+    <button onclick="setCurrentEva('eva2')">Select EVA2</button>
+
+    <div id="eva-status">Current EVA: EVA1</div>
+
+    <!-- Control Buttons -->
     <button onclick="startTracking()">Start Tracking</button>
-    <p id="status">Press the button to start tracking.</p>
+    <button onclick="stopTracking()">Stop Tracking</button>
+
+    <p id="status">Press Start to begin tracking.</p>
 
     <script>
-        const serverUrl = "https://192.168.50.182:8443";  // Replace with your server address
+        const serverUrl = "https://192.168.50.182:8443";  // Replace with your proxy server address
         let watchId = null;
+        let currentEva = "eva1";  // Default selection
+
+        function setCurrentEva(eva) {
+            currentEva = eva;
+            document.getElementById('eva-status').innerText = `Current EVA: ${eva.toUpperCase()}`;
+        }
 
         function startTracking() {
             if (!navigator.geolocation) {
@@ -34,24 +51,18 @@
             watchId = navigator.geolocation.watchPosition(position => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
-                const acc = position.coords.accuracy;
 
-                // Example conversion (replace with your real conversion if needed)
                 const posx = lon;
                 const posy = lat;
-                const heading = 0.0;  // Update if you have heading data
+                const heading = 0.0;  // Static heading, replace with real data if available
 
                 document.getElementById('status').innerText = 
-                    `Sending:\nLongitude=${posx}\nLatitude=${posy}\nHeading=${heading}`;
+                    `Sending for ${currentEva.toUpperCase()}:\nLongitude = ${posx}\nLatitude = ${posy}\nHeading = ${heading}`;
 
-                // Send posx
-                sendSingleValue("imu_eva1_posx", posx);
-
-                // Send posy
-                sendSingleValue("imu_eva1_posy", posy);
-
-                // Send heading
-                sendSingleValue("imu_eva1_heading", heading);
+                // Send posx, posy, and heading for the selected EVA
+                sendSingleValue(`imu_${currentEva}_posx`, posx);
+                sendSingleValue(`imu_${currentEva}_posy`, posy);
+                sendSingleValue(`imu_${currentEva}_heading`, heading);
 
             }, error => {
                 document.getElementById('status').innerText = `Error getting location: ${error.message}`;
@@ -62,14 +73,24 @@
             });
         }
 
-        function sendSingleValue(paramName, value) {
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                document.getElementById('status').innerText = "Tracking stopped.";
+            } else {
+                document.getElementById('status').innerText = "Tracking is not active.";
+            }
+        }
 
-            // paramName = paramName.replace(/=/g, '');
-            
+        function sendSingleValue(paramName, value) {
+            paramName = paramName.replace(/=/g, '');
+
             const formData = new URLSearchParams();
             formData.append(paramName, value);
 
-            // console.log(`Sending: ${paramName} = ${value}`);
+            console.log(`>>> Sending: ${paramName} = ${value}`);
+            console.log(`>>> Final Encoded Body: ${formData.toString()}`);
 
             fetch(serverUrl, {
                 method: "POST",
