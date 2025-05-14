@@ -43,8 +43,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         post_data_bytes = self.rfile.read(content_length)
         post_data = post_data_bytes.decode('utf-8')
 
-        # print("\n--- RAW POST DATA ---")
-        # print(f"Decoded: {post_data}")
+        print("\n--- RAW POST DATA ---")
+        print(f"Decoded: {post_data}")
 
         parsed_data = parse_qs(post_data)
 
@@ -71,9 +71,18 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
                 print(f"[{eva.upper()}] Converted to Lunar Coords: X={lunar_x}, Y={lunar_y}")
 
+                try: 
+                    print(f"forwarding to backend: {TARGET_HTTP_URL} with data")
+                    # resp = requests.post(TARGET_HTTP_URL, data=lunar_x, timeout=5)
+                    resp = requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posx={lunar_x}", timeout=5)
+                    resp = requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posy={lunar_y}", timeout=5)
+                    print(f"backend responded with status: {resp.status_code}")
+                except Exception as e:
+                    print(f"Error forwarding request: {e}")
+
                 # Forward to backend
-                requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posx={lunar_x}", timeout=5)
-                requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posy={lunar_y}", timeout=5)
+                # requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posx={lunar_x}", timeout=5)
+                # requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posy={lunar_y}", timeout=5)
 
                 # Clear buffer for this EVA
                 position_buffers[eva].clear()
