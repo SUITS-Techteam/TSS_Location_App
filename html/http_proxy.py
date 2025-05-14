@@ -7,7 +7,7 @@ from urllib.parse import parse_qs
 # Proxy Configuration
 PROXY_HOST = '0.0.0.0'
 PROXY_PORT = 8443
-TARGET_HTTP_URL = "http://192.168.50.182:14141"  # Update with your backend server IP
+TARGET_HTTP_URL = "http://192.168.51.201:14141"
 
 CERT_FILE = 'proxy.crt'
 KEY_FILE = 'proxy.key'
@@ -43,8 +43,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         post_data_bytes = self.rfile.read(content_length)
         post_data = post_data_bytes.decode('utf-8')
 
-        print("\n--- RAW POST DATA ---")
-        print(f"Decoded: {post_data}")
+        # print("\n--- RAW POST DATA ---")
+        # print(f"Decoded: {post_data}")
 
         parsed_data = parse_qs(post_data)
 
@@ -89,9 +89,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     httpd = HTTPServer((PROXY_HOST, PROXY_PORT), ProxyHandler)
-    httpd.socket = ssl.wrap_socket(httpd.socket,
-                                    certfile=CERT_FILE,
-                                    keyfile=KEY_FILE,
-                                    server_side=True)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
     print(f"Proxy HTTPS Server running on https://{PROXY_HOST}:{PROXY_PORT}")
     httpd.serve_forever()

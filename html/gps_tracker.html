@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GPS Tracker (With EVA Selection)</title>
+    <title>GPS Tracker (With EVA Control)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: Arial; text-align: center; margin-top: 30px; }
@@ -14,25 +14,32 @@
     <h1>GPS Tracker Web App</h1>
 
     <!-- EVA Selection Buttons -->
-    <button onclick="setCurrentEva('eva1')">Select EVA1</button>
-    <button onclick="setCurrentEva('eva2')">Select EVA2</button>
+    <button id="btn-eva1" onclick="setCurrentEva('eva1')">Select EVA1</button>
+    <button id="btn-eva2" onclick="setCurrentEva('eva2')">Select EVA2</button>
 
     <div id="eva-status">Current EVA: EVA1</div>
 
     <!-- Control Buttons -->
-    <button onclick="startTracking()">Start Tracking</button>
-    <button onclick="stopTracking()">Stop Tracking</button>
+    <button id="btn-start" onclick="startTracking()">Start Tracking</button>
+    <button id="btn-stop" onclick="stopTracking()" disabled>Stop Tracking</button>
 
     <p id="status">Press Start to begin tracking.</p>
 
     <script>
-        const serverUrl = "https://192.168.50.182:8443";  // Replace with your proxy server address
+        const serverUrl = "https://192.168.51.201:8443";
         let watchId = null;
-        let currentEva = "eva1";  // Default selection
+        let currentEva = "eva1";
 
         function setCurrentEva(eva) {
             currentEva = eva;
             document.getElementById('eva-status').innerText = `Current EVA: ${eva.toUpperCase()}`;
+        }
+
+        function setButtonState(isTracking) {
+            document.getElementById('btn-eva1').disabled = isTracking;
+            document.getElementById('btn-eva2').disabled = isTracking;
+            document.getElementById('btn-start').disabled = isTracking;
+            document.getElementById('btn-stop').disabled = !isTracking;
         }
 
         function startTracking() {
@@ -46,20 +53,22 @@
                 return;
             }
 
+            setButtonState(true); // Disable all except Stop
             document.getElementById('status').innerText = "Tracking started...";
 
             watchId = navigator.geolocation.watchPosition(position => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
+                const head = position.coords.heading;
 
                 const posx = lon;
                 const posy = lat;
-                const heading = 0.0;  // Static heading, replace with real data if available
+                const heading = head; 
 
                 document.getElementById('status').innerText = 
                     `Sending for ${currentEva.toUpperCase()}:\nLongitude = ${posx}\nLatitude = ${posy}\nHeading = ${heading}`;
 
-                // Send posx, posy, and heading for the selected EVA
+                // Send data for the selected EVA
                 sendSingleValue(`imu_${currentEva}_posx`, posx);
                 sendSingleValue(`imu_${currentEva}_posy`, posy);
                 sendSingleValue(`imu_${currentEva}_heading`, heading);
@@ -81,16 +90,16 @@
             } else {
                 document.getElementById('status').innerText = "Tracking is not active.";
             }
+
+            setButtonState(false); // Re-enable controls
         }
 
         function sendSingleValue(paramName, value) {
-            paramName = paramName.replace(/=/g, '');
-
+            paramName = paramName.replace(/=/g, ''); // Sanitize parameter name
             const formData = new URLSearchParams();
             formData.append(paramName, value);
 
             console.log(`>>> Sending: ${paramName} = ${value}`);
-            console.log(`>>> Final Encoded Body: ${formData.toString()}`);
 
             fetch(serverUrl, {
                 method: "POST",
