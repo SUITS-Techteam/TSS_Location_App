@@ -24,10 +24,9 @@ if __name__ == "__main__":
     httpd = http.server.HTTPServer((HOST, PORT), handler)
 
     try:
-        httpd.socket = ssl.wrap_socket(httpd.socket,
-                                        keyfile=KEY_FILE,
-                                        certfile=CERT_FILE,
-                                        server_side=True)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
         print(f"Serving HTTPS on https://{HOST}:{PORT}")
         httpd.serve_forever()
 
