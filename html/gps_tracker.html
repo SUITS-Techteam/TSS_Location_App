@@ -4,35 +4,48 @@
     <title>GPS Tracker (With EVA Control)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial; text-align: center; margin-top: 30px; }
-        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
-        #status { margin-top: 20px; font-size: 16px; white-space: pre-line; }
-        #eva-status { margin-top: 10px; font-weight: bold; }
+
+        body { font-family: Arial; text-align: center; margin-top: 30px; background-color: #000; color: rgb(203, 203, 203); }
+        button { padding: 10px; font-size: 16px; margin: 5px; }
+        #status { margin-top: 20px; font-size: 16px; white-space: pre-line; color: rgb(255, 255, 255);}
+        #pos-out {text-align: left; margin-left: 50px; margin-top: 20px; font-size: 16px; white-space: pre-line; color: rgb(255, 255, 255); }
+        #ev-select { margin-top: 20px; font-size: 16px; white-space: pre-line; color: white; }
+        #eva-status { margin-top: 10px; font-weight: bold; margin-bottom: 10px; font-size: 25px; }
+        #btn-start { width: 100px; margin-top: 50px; border-radius: 20px; background-color: #4CAF50; color: white; }
+        #btn-stop { width: 100px; border-radius: 20px; background-color: #f44336; color: white;}
+        #btn-stop:disabled { background-color: #f4776ef5; color: #e4d0d0; cursor: not-allowed; }
+    
+        
     </style>
 </head>
 <body>
-    <h1>GPS Tracker Web App</h1>
-
+    <h1>SUITS Position App</h1>
+    <!-- <h2>Current EV</h2> -->
     <!-- EVA Selection Buttons -->
-    <button id="btn-eva1" onclick="setCurrentEva('eva1')">Select EVA1</button>
-    <button id="btn-eva2" onclick="setCurrentEva('eva2')">Select EVA2</button>
-
-    <div id="eva-status">Current EVA: EVA1</div>
+    <div id="eva-status">Current EV: </div>
+    <div id="ev-select"> Select EV </div>
+    <div class = "ev-button-group"> 
+        <button id="btn-eva1" onclick="setCurrentEva('ev1')">EV1</button>
+        <button id="btn-eva2" onclick="setCurrentEva('ev2')">EV2</button>
+    </div>
+    <div id="pos-out"> </div>
 
     <!-- Control Buttons -->
-    <button id="btn-start" onclick="startTracking()">Start Tracking</button>
-    <button id="btn-stop" onclick="stopTracking()" disabled>Stop Tracking</button>
+    <div> <button id="btn-start" onclick="startTracking()">START</button> </div>
+    <button id="btn-stop" onclick="stopTracking()" disabled>STOP</button>
 
-    <p id="status">Press Start to begin tracking.</p>
+    
+
+    <p id="status">Press Start to begin location tracking.</p>
 
     <script>
         const serverUrl = "https://192.168.51.110:8443";
         let watchId = null;
-        let currentEva = "eva1";
+        let currentEva = "ev1";
 
         function setCurrentEva(eva) {
             currentEva = eva;
-            document.getElementById('eva-status').innerText = `Current EVA: ${eva.toUpperCase()}`;
+            document.getElementById('eva-status').innerText = `Current EV: ${eva.toUpperCase()}`;
         }
 
         function setButtonState(isTracking) {
@@ -65,16 +78,18 @@
                 const posy = lat;
                 const heading = head; 
 
-                document.getElementById('status').innerText = 
-                    `Sending for ${currentEva.toUpperCase()}:\nLongitude = ${posx}\nLatitude = ${posy}\nHeading = ${heading}`;
+                document.getElementById('pos-out').innerText = 
+                    `Sending for ${currentEva.toUpperCase()}:\nLongitude = ${posx}\nLatitude  = ${posy}\nHeading   = ${heading}`;
 
                 // Send data for the selected EVA
-                sendSingleValue(`imu_${currentEva}_posx`, posx);
-                sendSingleValue(`imu_${currentEva}_posy`, posy);
-                sendSingleValue(`imu_${currentEva}_heading`, heading);
+                let sendEV = currentEva === "ev1" ? "eva1" : "eva2";
+
+                sendSingleValue(`imu_${sendEV}_posx`, posx);
+                sendSingleValue(`imu_${sendEV}_posy`, posy);
+                sendSingleValue(`imu_${sendEV}_heading`, heading);
 
             }, error => {
-                document.getElementById('status').innerText = `Error getting location: ${error.message}`;
+                document.getElementById('pos-out').innerText = `Error getting location: ${error.message}`;
             }, {
                 enableHighAccuracy: true,
                 maximumAge: 0,
