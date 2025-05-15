@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 import ssl
 import requests
@@ -6,6 +8,7 @@ from urllib.parse import parse_qs
 import os
 
 # === Configuration ===
+DEBUG = False
 HOST = '0.0.0.0'
 PORT = 8443  # Single port for everything
 TARGET_HTTP_URL = "http://192.168.51.110:14141"
@@ -48,8 +51,9 @@ class UnifiedHandler(SimpleHTTPRequestHandler):
         post_data_bytes = self.rfile.read(content_length)
         post_data = post_data_bytes.decode('utf-8')
 
-        print("\n--- RAW POST DATA ---")
-        print(f"Decoded: {post_data}")
+        if DEBUG:
+            print("\n--- RAW POST DATA ---")
+            print(f"Decoded: {post_data}")
 
         parsed_data = parse_qs(post_data)
 
@@ -69,19 +73,20 @@ class UnifiedHandler(SimpleHTTPRequestHandler):
 
                 lunar_x = convert_lon_to_lunar_x(lon)
                 lunar_y = convert_lat_to_lunar_y(lat)
-
-                print(f"[{eva.upper()}] Converted Lunar Coords: X={lunar_x}, Y={lunar_y}")
+                if DEBUG:
+                    print(f"[{eva.upper()}] Converted Lunar Coords: X={lunar_x}, Y={lunar_y}")
 
                 try:
                     requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posx={lunar_x}", timeout=5)
                     requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_posy={lunar_y}", timeout=5)
-                    print(f"Forwarded to backend successfully for {eva.upper()}")
+                    if DEBUG:
+                        print(f"Forwarded to backend successfully for {eva.upper()}")
                 except Exception as e:
                     print(f"Error forwarding request: {e}")
 
                 position_buffers[eva].clear()
-
-        self.send_response(200)
+        if DEBUG:
+            self.send_response(200)
         self.end_headers()
         self.wfile.write(b'OK')
 

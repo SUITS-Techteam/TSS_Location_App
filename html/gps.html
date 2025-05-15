@@ -14,12 +14,15 @@
         #btn-start { width: 100px; margin-top: 50px; border-radius: 20px; background-color: #4CAF50; color: white; }
         #btn-stop { width: 100px; border-radius: 20px; background-color: #f44336; color: white;}
         #btn-stop:disabled { background-color: #f4776ef5; color: #e4d0d0; cursor: not-allowed; }
+        #suits-img { width: 100px; height: 100px; margin-top: 20px; }
     
         
     </style>
 </head>
 <body>
-    <h1>SUITS Position App</h1>
+    <background>
+        <img id="suits-img" src="suits_logo.png">
+    <h1>  SUITS Position App</h1>
     <!-- <h2>Current EV</h2> -->
     <!-- EVA Selection Buttons -->
     <div id="eva-status">Current EV: </div>
@@ -41,7 +44,7 @@
     <script>
         const serverUrl = "https://192.168.51.110:8443";
         let watchId = null;
-        let currentEva = "ev1";
+        let currentEva = " ";
 
         function setCurrentEva(eva) {
             currentEva = eva;
@@ -56,6 +59,10 @@
         }
 
         function startTracking() {
+            if (currentEva === " ") {
+                document.getElementById('status').innerText = "Please select an EV.";
+                return;
+            }
             if (!navigator.geolocation) {
                 document.getElementById('status').innerText = "Geolocation not supported.";
                 return;
