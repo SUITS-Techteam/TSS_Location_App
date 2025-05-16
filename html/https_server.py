@@ -16,25 +16,25 @@ TARGET_HTTP_URL = "http://192.168.51.110:14141"
 CERT_FILE = 'server.crt'
 KEY_FILE = 'server.key'
 
-ORIGIN_LAT = 29.56441
-ORIGIN_LON = -95.08245
-DUST_ORIGIN_X = -5762.13781
-DUST_ORIGIN_Y = -10076.5894
-MOON_RADIUS = 1737400  # meters
+ORIGIN_LAT = 29.5643270
+ORIGIN_LON = -95.0813360
+DUST_ORIGIN_X = -5667.10
+DUST_ORIGIN_Y = -10058.13
+EARTH_RADIUS = 6371000  # meters
 
 position_buffers = {'eva1': {}, 'eva2': {}}
 
 def convert_lat_to_lunar_y(lat):
     lat_rad = math.radians(lat)
     origin_lat_rad = math.radians(ORIGIN_LAT)
-    delta_y = MOON_RADIUS * (lat_rad - origin_lat_rad)
+    delta_y = EARTH_RADIUS * (lat_rad - origin_lat_rad)
     return DUST_ORIGIN_Y + delta_y
 
-def convert_lon_to_lunar_x(lon):
+def convert_lon_to_lunar_x(lon, lat):
     lon_rad = math.radians(lon)
     origin_lon_rad = math.radians(ORIGIN_LON)
-    avg_lat_rad = math.radians(ORIGIN_LAT)
-    delta_x = MOON_RADIUS * (lon_rad - origin_lon_rad) * math.cos(avg_lat_rad)
+    current_lat_rad = math.radians(lat)
+    delta_x = EARTH_RADIUS * (lon_rad - origin_lon_rad) * math.cos(current_lat_rad)
     return DUST_ORIGIN_X + delta_x
 
 class UnifiedHandler(SimpleHTTPRequestHandler):
@@ -71,7 +71,7 @@ class UnifiedHandler(SimpleHTTPRequestHandler):
                 lon = position_buffers[eva]['posx']
                 lat = position_buffers[eva]['posy']
 
-                lunar_x = convert_lon_to_lunar_x(lon)
+                lunar_x = convert_lon_to_lunar_x(lon, lat)
                 lunar_y = convert_lat_to_lunar_y(lat)
                 if DEBUG:
                     print(f"[{eva.upper()}] Converted Lunar Coords: X={lunar_x}, Y={lunar_y}")

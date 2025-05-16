@@ -25,7 +25,7 @@
     <h1>  SUITS Position App</h1>
     <!-- <h2>Current EV</h2> -->
     <!-- EVA Selection Buttons -->
-    <div id="eva-status">Current EV: </div>
+    <div id="eva-status"> </div>
     <div id="ev-select"> Select EV </div>
     <div class = "ev-button-group"> 
         <button id="btn-eva1" onclick="setCurrentEva('ev1')">EV1</button>
@@ -48,7 +48,7 @@
 
         function setCurrentEva(eva) {
             currentEva = eva;
-            document.getElementById('eva-status').innerText = `Current EV: ${eva.toUpperCase()}`;
+            document.getElementById('eva-status').innerText = `${eva.toUpperCase()}`;
         }
 
         function setButtonState(isTracking) {
@@ -72,6 +72,8 @@
                 document.getElementById('status').innerText = "Already tracking.";
                 return;
             }
+
+            requestWakeLock(); // Request wake lock to keep the screen on
 
             setButtonState(true); // Disable all except Stop
             document.getElementById('status').innerText = "Tracking started...";
@@ -113,11 +115,12 @@
                 document.getElementById('status').innerText = "Tracking is not active.";
             }
 
+            releaseWakeLock();
             setButtonState(false); // Re-enable controls
         }
 
         function sendSingleValue(paramName, value) {
-            paramName = paramName.replace(/=/g, ''); // Sanitize parameter name
+            paramName = paramName.replace(/=/g, '');
             const formData = new URLSearchParams();
             formData.append(paramName, value);
 
@@ -138,6 +141,36 @@
                 console.error(`Network error sending ${paramName}: ${err}`);
             });
         }
+
+            let wakeLock = null;
+
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log("Screen wake lock acquired.");
+
+                        // Re-acquire wake lock if it is released by the system (e.g., after a timeout)
+                        wakeLock.addEventListener('release', () => {
+                            console.log('Wake lock released.');
+                        });
+                    } else {
+                        console.log("Wake Lock API not supported.");
+                    }
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            }
+
+            // Optional: Release wake lock when done
+            async function releaseWakeLock() {
+                if (wakeLock) {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    console.log("Screen wake lock manually released.");
+                }
+            }
+
     </script>
 </body>
 </html>
