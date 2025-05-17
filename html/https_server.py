@@ -90,6 +90,9 @@ class UnifiedHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'OK')
 
+    def translate_path(self, path):
+        return os.path.join(os.getcwd(), path.lstrip("/"))
+
 if __name__ == "__main__":
    
     httpd = HTTPServer((HOST, PORT), UnifiedHandler)
