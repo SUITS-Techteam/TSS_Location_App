@@ -1,8 +1,12 @@
 # Running the position app: 
 If you are using python3 you can run: 
+
 `./https_server.py`
+
 Otherwise run: 
+
 `python server_http.py`
+
 Then start your TSS server. 
 
 # Generate Certificates
