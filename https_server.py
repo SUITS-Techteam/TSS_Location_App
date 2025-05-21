@@ -10,7 +10,7 @@ import os
 # === Configuration ===
 DEBUG = False
 HOST = '0.0.0.0'
-PORT = 8443  # Single port for everything
+PORT = 8000  # Single port for everything
 TARGET_HTTP_URL = "http://192.168.51.110:14141"
 
 CERT_FILE = 'server.crt'
@@ -18,6 +18,11 @@ KEY_FILE = 'server.key'
 
 ORIGIN_LAT = 29.5643270
 ORIGIN_LON = -95.0813360
+
+#hotel coords
+#ORIGIN_LAT = 29.5244187
+#ORIGIN_LON = -95.122330161
+
 DUST_ORIGIN_X = -5667.10
 DUST_ORIGIN_Y = -10058.13
 EARTH_RADIUS = 6371000  # meters
@@ -60,12 +65,27 @@ class UnifiedHandler(SimpleHTTPRequestHandler):
         for eva in ['eva1', 'eva2']:
             posx_key = f"imu_{eva}_posx"
             posy_key = f"imu_{eva}_posy"
+            head_key  = f"imu_{eva}_heading"
 
             if posx_key in parsed_data:
                 position_buffers[eva]['posx'] = float(parsed_data[posx_key][0])
 
             if posy_key in parsed_data:
                 position_buffers[eva]['posy'] = float(parsed_data[posy_key][0])
+
+            if head_key in parsed_data and parsed_data[head_key][0] != 'null':
+                position_buffers[eva]['heading'] = float(parsed_data[head_key][0])
+                head = position_buffers[eva]['heading']
+                try:
+                    # if head != 'null':
+                    requests.post(TARGET_HTTP_URL, data=f"imu_{eva}_heading={head}", timeout=5)
+                    if DEBUG:
+                        print(f"Forwarded to backend successfully for {eva.upper()}")
+                except Exception as e:
+                    print(f"Error forwarding request: {e}")
+            
+            # if 'heading' in position_buffers[eva]: 
+                
 
             if 'posx' in position_buffers[eva] and 'posy' in position_buffers[eva]:
                 lon = position_buffers[eva]['posx']

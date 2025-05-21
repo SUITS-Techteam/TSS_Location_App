@@ -31,7 +31,7 @@
     <script>
         const canvas = document.getElementById('mapCanvas');
         const ctx = canvas.getContext('2d');
-        const serverUrl = "https://192.168.51.110:8443";  // Update with correct IP if needed
+        const serverUrl = "http://192.168.51.110:14141";  // Update with correct IP if needed
         const mapImage = new Image();
         mapImage.src = "SUIT_MAP.png";
 
@@ -153,7 +153,7 @@
                     const posx2 = parseFloat(params.get("imu_eva2_posx")) || 0;
                     const posy2 = parseFloat(params.get("imu_eva2_posy")) || 0;
 
-                    drawPosition(posx1, posy1, "yellow", "eva1");
+                    drawPosition(posx1, posy1, "red", "eva1");
                     drawPosition(posx2, posy2, "blue", "eva2");
 
                 } catch (e) {
